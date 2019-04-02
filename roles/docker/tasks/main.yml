@@ -1,0 +1,37 @@
+---
+- name: 'Install required packages'
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - yum-utils
+    - device-mapper-persistent-data
+    - lvm2 
+
+- name: 'Add docker repository'
+  get_url:
+    url: 'https://download.docker.com/linux/centos/docker-ce.repo'
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: 0644
+
+- name: 'Install docker-ce packages'
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+
+- name: 'Start docker service'
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: 'Run test image'
+  command: docker run hello-world
+  register: dockertest
+  changed_when: "dockertest.rc != 0"
+
+- debug: msg="{{ dockertest.stdout }}"
